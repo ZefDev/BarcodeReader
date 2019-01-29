@@ -7,23 +7,20 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.hardware.Camera;
-import android.hardware.Camera.AutoFocusCallback;
-import android.hardware.Camera.PreviewCallback;
-import android.hardware.Camera.Size;
+
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.z.CameraPreview;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
@@ -35,12 +32,16 @@ import net.sourceforge.zbar.Image;
 import net.sourceforge.zbar.ImageScanner;
 import net.sourceforge.zbar.Symbol;
 import net.sourceforge.zbar.SymbolSet;
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
+import android.view.MenuItem;
 
-import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 
-public class MainActivity extends Activity {
+public class activityMainMenu extends Activity {
     private static final int WHITE = 0xFFFFFFFF;
     private static final int BLACK = 0xFF000000;
     private static final int REQUEST_ID_READ_WRITE_PERMISSION = 100;
@@ -48,28 +49,28 @@ public class MainActivity extends Activity {
     private CameraPreview mPreview;
     private Handler autoFocusHandler;
     private FrameLayout preview;
-    private RelativeLayout shtrihLayout;
+    private RelativeLayout shtrihLayout,layoutScan;
+    private LinearLayout layoutGenerate;
     private TextView tvShtrih;
     private ImageView ivShtrih;
     private ImageScanner scanner;
     private boolean barcodeScanned = false;
     private boolean previewing = true;
-    private String lastScannedCode,nameActiv, shtrihCode;
+    private String lastScannedCode;
     private Image codeImage;
-    private Button repeat,contin,share;
+    private Button repeat,contin,share,genereate,shareBarCode;
+    private EditText editTextBarCode;
+
 
     static {
-        //  if(android.os.Build.VERSION.SDK_INT >= 23) {
-        //     System.loadLibrary("iconv1");///("iconv");
-        //}{
         System.loadLibrary("iconv");
-        //}
     }
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main_menu);
+        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
@@ -78,18 +79,36 @@ public class MainActivity extends Activity {
         repeat = (Button) findViewById(R.id.repeat);
         contin = (Button) findViewById(R.id.contin);
         share = (Button) findViewById(R.id.share);
+        genereate = (Button) findViewById(R.id.generateNewBarCode);
+        shareBarCode = (Button) findViewById(R.id.shareBarCode);
         preview = (FrameLayout) findViewById(R.id.cameraPreview);
         shtrihLayout = (RelativeLayout) findViewById(R.id.shtrih_layout_id);
+        layoutGenerate = (LinearLayout) findViewById(R.id.layoutGenerate);
+        layoutScan = (RelativeLayout) findViewById(R.id.layoutScan);
         tvShtrih = (TextView) findViewById(R.id.tvShtrihCode);
         ivShtrih = (ImageView) findViewById(R.id.ivShtrihCode);
+        editTextBarCode = (EditText) findViewById(R.id.editTextBarCode);
         /* Instance barcode scanner */
         scanner = new ImageScanner();
         scanner.setConfig(0, Config.X_DENSITY, 3);
         scanner.setConfig(0, Config.Y_DENSITY, 3);
+        shareBarCode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        genereate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                generateCodeImage(editTextBarCode.getText().toString());
+            }
+        });
         contin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, WebPage.class);
+
+                Intent intent = new Intent(activityMainMenu.this, WebPage.class);
                 intent.putExtra("link", tvShtrih.getText().toString());
                 startActivity(intent);
             }
@@ -106,40 +125,18 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 Intent sharingIntent = new Intent(android.content.Intent.ACTION_SEND);
                 sharingIntent.setType("text/plain");
-                String shareBody = "Ссылка  "+tvShtrih.getText().toString();
+                String shareBody = tvShtrih.getText().toString();
                 sharingIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Subject Here");
                 sharingIntent.putExtra(android.content.Intent.EXTRA_TEXT, shareBody);
                 startActivity(sharingIntent);
             }
         });
-        //scanText = (TextView) findViewById(R.id.scanText);
-
-        //bar_code = (ImageView) findViewById(R.id.bar_code);
-        //code_for_bar = (EditText) findViewById(R.id.code_for_bar);
-        /*code_for_bar.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i2, int i3) {
-                //
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) {
-                //
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                String text = editable.toString();
-                generateCodeImage(text);
-            }
-        });*/
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         resumeCamera();
-        //generateCodeImage(code_for_bar.getText().toString());
     }
 
     public void onPause() {
@@ -169,9 +166,7 @@ public class MainActivity extends Activity {
         } else {
             c = Camera.open(0);
         }
-
-
-        return c;
+       return c;
     }
 
     private void releaseCamera() {
@@ -186,7 +181,6 @@ public class MainActivity extends Activity {
     }
 
     private void resumeCamera() {
-        //scanText.setText("scan");
         mCamera = getCameraInstance();
         mPreview = new CameraPreview(this, mCamera, previewCb, autoFocusCB);
         preview.removeAllViews();
@@ -210,7 +204,6 @@ public class MainActivity extends Activity {
 
     final Camera.PreviewCallback previewCb = new Camera.PreviewCallback() {
         public void onPreviewFrame(byte[] data, Camera camera) {
-//            Log.d("CameraTestActivity", "onPreviewFrame data length = " + (data != null ? data.length : 0));
             codeImage.setData(data);
             int result = scanner.scanImage(codeImage);
             if (result != 0) {
@@ -220,9 +213,6 @@ public class MainActivity extends Activity {
                     if ((lastScannedCode != null) & (!barcodeScanned)) {
                         shtrihLayout.setVisibility(View.VISIBLE);
                         tvShtrih.setText(lastScannedCode);
-                        //restController.getActiv(null,null,lastScannedCode);
-
-                        //ivShtrih.setImageBitmap(getResources().getDrawable(getDrawable(R.drawable.nophoto)));<--
                         barcodeScanned = true;
                     }
                 }
@@ -238,14 +228,14 @@ public class MainActivity extends Activity {
         }
     };
 
-    /*private void generateCodeImage(String text) {
+    private void generateCodeImage(String text) {
         try {
             Bitmap bitmap = encodeAsBitmap(text, BarcodeFormat.QR_CODE, 150, 150);
-            bar_code.setImageBitmap(bitmap);
+            ivShtrih.setImageBitmap(bitmap);
         } catch (WriterException e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     /**
      * Generate bitmap image with QR or BAR code.
@@ -260,7 +250,7 @@ public class MainActivity extends Activity {
 
 
 
-  /*  private Bitmap encodeAsBitmap(String code, BarcodeFormat format, int img_width, int img_height) throws WriterException {
+    private Bitmap encodeAsBitmap(String code, BarcodeFormat format, int img_width, int img_height) throws WriterException {
         if (code == null) {
             return null;
         }
@@ -291,7 +281,7 @@ public class MainActivity extends Activity {
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565);
         bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
         return bitmap;
-    }*/
+    }
     private static String guessAppropriateEncoding(CharSequence contents) {
         // Very crude at the moment
         for (int i = 0; i < contents.length(); i++) {
@@ -305,7 +295,6 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
-
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         //
         switch (requestCode) {
@@ -317,27 +306,43 @@ public class MainActivity extends Activity {
                 if (grantResults.length > 1
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     c = Camera.open(0);
-                    Toast.makeText(this, "Permission granted!", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(this, "Permission granted!", Toast.LENGTH_LONG).show();
                 }
                 // Cancelled or denied.
                 else {
-                    Toast.makeText(this, "Permission denied!", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(this, "Permission denied!", Toast.LENGTH_LONG).show();
                 }
                 break;
             }
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
-        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
-        if (imageReturnedIntent != null) {
-            shtrihCode = imageReturnedIntent.getStringExtra("shtrihCode");
-            nameActiv = imageReturnedIntent.getStringExtra("nameActiv");
-            return;
-        }
 
+    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener;
+
+    {
+        mOnNavigationItemSelectedListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
+
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.navigation_close:
+                        finish();
+                        return true;
+                    case R.id.navigation_scan_barcode:
+                        layoutGenerate.setVisibility(View.GONE);
+                        layoutScan.setVisibility(View.VISIBLE);
+                        return true;
+                    case R.id.navigation_generate:
+                        layoutGenerate.setVisibility(View.VISIBLE);
+                        layoutScan.setVisibility(View.GONE);
+                        return true;
+                }
+                return false;
+            }
+        };
     }
 }
+
 
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+
+    <item
+        android:id="@+id/navigation_scan_barcode"
+        android:icon="@drawable/scan"
+        android:title="@string/title_scan_barcode" />
+
+    <item
+        android:id="@+id/navigation_generate"
+        android:icon="@drawable/create_bar_code"
+        android:title="@string/title_generate" />
+
+    <item
+        android:id="@+id/navigation_close"
+        android:icon="@drawable/exit_to_app"
+        android:title="@string/title_close" />
+
+</menu>

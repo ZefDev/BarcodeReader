@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">z</string>
+    <string name="app_name">Scan BarCode</string>
+    <string name="title_activity_main_menu">Scan BarCode</string>
+    <string name="title_scan_barcode">Scan</string>
+    <string name="title_generate">Generate</string>
+    <string name="title_close">Close</string>
 </resources>
