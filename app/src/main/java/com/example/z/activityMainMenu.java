@@ -9,8 +9,13 @@ import android.graphics.Bitmap;
 import android.hardware.Camera;
 
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.StrictMode;
+import android.provider.MediaStore;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.Button;
@@ -37,7 +42,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URI;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -65,6 +78,8 @@ public class activityMainMenu extends Activity {
     static {
         System.loadLibrary("iconv");
     }
+
+    private Uri URIBarcode;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,13 +110,50 @@ public class activityMainMenu extends Activity {
         shareBarCode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+                StrictMode.setVmPolicy(builder.build());
+                Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+                intent.putExtra(Intent.EXTRA_STREAM, URIBarcode);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.setType("image/*");
+                startActivity(intent);
+                /*Bitmap bmp = null;
+                try {
+                    bmp = MediaStore.Images.Media.getBitmap(getContentResolver(), URIBarcode);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                byte[] byteArray = stream.toByteArray();
+                Image image = new Image();
+                image.setData(byteArray);
+
+                int result = scanner.scanImage(image);
+                if (result != 0) {
+                    SymbolSet syms = scanner.getResults();
+                    for (Symbol sym : syms) {
+                        lastScannedCode = sym.getData();
+                        if ((lastScannedCode != null) & (!barcodeScanned)) {
+                            Toast.makeText(getApplicationContext(),lastScannedCode,Toast.LENGTH_LONG).show();
+                            //shtrihLayout.setVisibility(View.VISIBLE);
+                            //tvShtrih.setText(lastScannedCode);
+                            //barcodeScanned = true;
+                        }
+                    }
+                }*/
 
             }
         });
         genereate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                generateCodeImage(editTextBarCode.getText().toString());
+                try {
+                    generateCodeImage(editTextBarCode.getText().toString(),"barcode.jpg");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
         contin.setOnClickListener(new View.OnClickListener() {
@@ -228,13 +280,27 @@ public class activityMainMenu extends Activity {
         }
     };
 
-    private void generateCodeImage(String text) {
+    private void generateCodeImage(String text, String filename) throws IOException {
+        Bitmap bitmap = null;
         try {
-            Bitmap bitmap = encodeAsBitmap(text, BarcodeFormat.QR_CODE, 150, 150);
+            bitmap = encodeAsBitmap(text, BarcodeFormat.QR_CODE, 150, 150);
             ivShtrih.setImageBitmap(bitmap);
         } catch (WriterException e) {
             e.printStackTrace();
         }
+        // Assume block needs to be inside a Try/Catch block.
+        String path = Environment.getExternalStorageDirectory().toString();
+        OutputStream fOut = null;
+        Integer counter = 0;
+        File file = new File(path, filename); // the File to save , append increasing numeric counter to prevent files from getting overwritten.
+        fOut = new FileOutputStream(file);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut); // saving the Bitmap to a file compressed as a JPEG with 85% compression rate
+        fOut.flush(); // Not really required
+        fOut.close(); // do not forget to close the stream
+
+        MediaStore.Images.Media.insertImage(getContentResolver(),file.getAbsolutePath(),file.getName(),file.getName());
+        URIBarcode = Uri.fromFile(file);
+        //return file.getAbsolutePath();
     }
 
     /**
