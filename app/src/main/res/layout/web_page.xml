@@ -22,7 +22,7 @@
                 android:layout_height="50dp"
                 android:layout_weight="1"
                 android:background="@android:color/black"
-                android:text="На главную"
+                android:text="Back"
                 android:textColor="@android:color/background_light"
                 android:textSize="16sp"
                 app:srcCompat="?attr/actionModeCloseDrawable" />
