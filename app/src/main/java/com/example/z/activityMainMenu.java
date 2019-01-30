@@ -233,6 +233,7 @@ public class activityMainMenu extends Activity {
 
             // Check if we have read/write permission
             // Kiểm tra quyền đọc/ghi dữ liệu vào thiết bị lưu trữ ngoài.
+
             int camer = ActivityCompat.checkSelfPermission(this,
                     Manifest.permission.CAMERA);
 
@@ -243,6 +244,8 @@ public class activityMainMenu extends Activity {
             } else {
                 c = Camera.open(0);
             }
+
+
         } else {
             c = Camera.open(0);
         }
@@ -308,26 +311,48 @@ public class activityMainMenu extends Activity {
         }
     };
 
-    private void generateCodeImage(String text, String filename) throws IOException {
-        Bitmap bitmap = null;
-        try {
-            bitmap = encodeAsBitmap(text, BarcodeFormat.QR_CODE, 150, 150);
-            ivShtrih.setImageBitmap(bitmap);
-        } catch (WriterException e) {
-            e.printStackTrace();
-        }
-        // Assume block needs to be inside a Try/Catch block.
-        String path = Environment.getExternalStorageDirectory().toString();
-        OutputStream fOut = null;
-        Integer counter = 0;
-        File file = new File(path, filename); // the File to save , append increasing numeric counter to prevent files from getting overwritten.
-        fOut = new FileOutputStream(file);
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut); // saving the Bitmap to a file compressed as a JPEG with 85% compression rate
-        fOut.flush(); // Not really required
-        fOut.close(); // do not forget to close the stream
+    public  boolean isStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                //Log.v(TAG,"Permission is granted");
+                return true;
+            } else {
 
-        MediaStore.Images.Media.insertImage(getContentResolver(),file.getAbsolutePath(),file.getName(),file.getName());
-        URIBarcode = Uri.fromFile(file);
+                //Log.v(TAG,"Permission is revoked");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            //Log.v(TAG,"Permission is granted");
+            return true;
+        }
+    }
+
+    private void generateCodeImage(String text, String filename) throws IOException {
+
+        if(isStoragePermissionGranted()) {
+            Bitmap bitmap = null;
+            try {
+                bitmap = encodeAsBitmap(text, BarcodeFormat.QR_CODE, 150, 150);
+                ivShtrih.setImageBitmap(bitmap);
+            } catch (WriterException e) {
+                e.printStackTrace();
+            }
+            // Assume block needs to be inside a Try/Catch block.
+            String path = Environment.getExternalStorageDirectory().toString();
+            OutputStream fOut = null;
+            Integer counter = 0;
+            File file = new File(path, filename); // the File to save , append increasing numeric counter to prevent files from getting overwritten.
+            fOut = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut); // saving the Bitmap to a file compressed as a JPEG with 85% compression rate
+            fOut.flush(); // Not really required
+            fOut.close(); // do not forget to close the stream
+
+            MediaStore.Images.Media.insertImage(getContentResolver(), file.getAbsolutePath(), file.getName(), file.getName());
+            URIBarcode = Uri.fromFile(file);
+        }
         //return file.getAbsolutePath();
     }
 
