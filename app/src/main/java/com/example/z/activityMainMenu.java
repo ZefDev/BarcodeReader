@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 
 import android.net.Uri;
@@ -53,6 +54,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.util.EnumMap;
@@ -62,6 +64,7 @@ public class activityMainMenu extends Activity {
     private static final int WHITE = 0xFFFFFFFF;
     private static final int BLACK = 0xFF000000;
     private static final int REQUEST_ID_READ_WRITE_PERMISSION = 100;
+    private static final int SELECT_PHOTO = 10;
     private Camera mCamera;
     private CameraPreview mPreview;
     private Handler autoFocusHandler;
@@ -75,7 +78,7 @@ public class activityMainMenu extends Activity {
     private boolean previewing = true;
     private String lastScannedCode;
     private Image codeImage;
-    private Button repeat,contin,share,genereate,shareBarCode,copy;
+    private Button repeat,contin,share,genereate,shareBarCode,copy,scanFromGallery;
     private EditText editTextBarCode;
 
 
@@ -92,7 +95,7 @@ public class activityMainMenu extends Activity {
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
+        isStoragePermissionGranted();
 
         autoFocusHandler = new Handler();
         repeat = (Button) findViewById(R.id.repeat);
@@ -101,6 +104,8 @@ public class activityMainMenu extends Activity {
         genereate = (Button) findViewById(R.id.generateNewBarCode);
         shareBarCode = (Button) findViewById(R.id.shareBarCode);
         copy = (Button) findViewById(R.id.copy);
+        scanFromGallery = (Button) findViewById(R.id.button);
+
         preview = (FrameLayout) findViewById(R.id.cameraPreview);
         shtrihLayout = (RelativeLayout) findViewById(R.id.shtrih_layout_id);
         layoutGenerate = (LinearLayout) findViewById(R.id.layoutGenerate);
@@ -112,6 +117,16 @@ public class activityMainMenu extends Activity {
         scanner = new ImageScanner();
         scanner.setConfig(0, Config.X_DENSITY, 3);
         scanner.setConfig(0, Config.Y_DENSITY, 3);
+
+        scanFromGallery.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, 10);
+
+            }
+        });
+
         shareBarCode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -122,33 +137,6 @@ public class activityMainMenu extends Activity {
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 intent.setType("image/*");
                 startActivity(intent);
-                /*Bitmap bmp = null;
-                try {
-                    bmp = MediaStore.Images.Media.getBitmap(getContentResolver(), URIBarcode);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bmp.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-                Image image = new Image();
-                image.setData(byteArray);
-
-                int result = scanner.scanImage(image);
-                if (result != 0) {
-                    SymbolSet syms = scanner.getResults();
-                    for (Symbol sym : syms) {
-                        lastScannedCode = sym.getData();
-                        if ((lastScannedCode != null) & (!barcodeScanned)) {
-                            Toast.makeText(getApplicationContext(),lastScannedCode,Toast.LENGTH_LONG).show();
-                            //shtrihLayout.setVisibility(View.VISIBLE);
-                            //tvShtrih.setText(lastScannedCode);
-                            //barcodeScanned = true;
-                        }
-                    }
-                }*/
-
             }
         });
         copy.setOnClickListener(new View.OnClickListener() {
@@ -183,14 +171,6 @@ public class activityMainMenu extends Activity {
                 } else {
                     Toast.makeText(getApplicationContext(),"Sorry, this is dont link.",Toast.LENGTH_LONG).show();
                 }
-                /*if(barCode.contains("https://") | barCode.contains("http://")){
-                    Intent intent = new Intent(activityMainMenu.this, WebPage.class);
-                    intent.putExtra("link", barCode);
-                    startActivity(intent);
-                }
-                else {
-                    Toast.makeText(getApplicationContext(),"Sorry, this is dont link.",Toast.LENGTH_LONG).show();
-                }*/
             }
         });
         repeat.setOnClickListener(new View.OnClickListener() {
@@ -332,7 +312,7 @@ public class activityMainMenu extends Activity {
 
     private void generateCodeImage(String text, String filename) throws IOException {
 
-        if(isStoragePermissionGranted()) {
+        //if(isStoragePermissionGranted()) {
             Bitmap bitmap = null;
             try {
                 bitmap = encodeAsBitmap(text, BarcodeFormat.QR_CODE, 150, 150);
@@ -352,7 +332,7 @@ public class activityMainMenu extends Activity {
 
             MediaStore.Images.Media.insertImage(getContentResolver(), file.getAbsolutePath(), file.getName(), file.getName());
             URIBarcode = Uri.fromFile(file);
-        }
+        //}
         //return file.getAbsolutePath();
     }
 
@@ -460,6 +440,53 @@ public class activityMainMenu extends Activity {
                 return false;
             }
         };
+    }
+
+    public void scanBarCodeFromGallery(Bitmap bmp){
+
+
+
+        int width = bmp.getWidth();
+        int height = bmp.getHeight();
+        int[] pixels = new int[width*height];
+
+        bmp.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        Image barcode = new Image(width, height, "RGB4");
+        barcode.setData(pixels);
+
+        int result = scanner.scanImage(barcode.convert("Y800"));
+        if (result != 0) {
+            SymbolSet syms = scanner.getResults();
+            for (Symbol sym : syms) {
+                lastScannedCode = sym.getData();
+                if ((lastScannedCode != null) & (!barcodeScanned)) {
+                    shtrihLayout.setVisibility(View.VISIBLE);
+                    tvShtrih.setText(lastScannedCode);
+                    barcodeScanned = true;
+                    //Toast.makeText(getApplicationContext(),lastScannedCode,Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
+        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+
+        switch(requestCode) {
+            case SELECT_PHOTO:
+                if(resultCode == RESULT_OK){
+                    Uri selectedImage = imageReturnedIntent.getData();
+                    InputStream imageStream = null;
+                    try {
+                        imageStream = getContentResolver().openInputStream(selectedImage);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    Bitmap yourSelectedImage = BitmapFactory.decodeStream(imageStream);
+                    scanBarCodeFromGallery(yourSelectedImage);
+                }
+        }
     }
 }
 

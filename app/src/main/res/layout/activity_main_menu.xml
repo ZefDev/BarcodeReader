@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="25dp"
             android:ems="10"
-            android:hint="Введите ссылку или фразу"
+            android:hint="Enter a message to create barcode"
             android:inputType="textPersonName"
             android:textSize="20sp" />
 
@@ -36,7 +36,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:background="@android:color/background_dark"
-            android:text="Сгенерировать"
+            android:text="Generate"
             android:textColor="@android:color/background_light"
             android:textSize="16sp" />
 
@@ -48,7 +48,7 @@
             android:layout_marginTop="0dp"
             android:layout_marginRight="10dp"
             android:background="@android:color/black"
-            android:text="Поделиться"
+            android:text="Share"
             android:textColor="@android:color/background_light"
             android:textSize="16sp" />
     </LinearLayout>
@@ -101,6 +101,15 @@
             android:background="@color/colorPrimary"
             android:visibility="visible">
 
+            <Button
+                android:id="@+id/button"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/add_photo"
+                android:paddingRight="0dp"
+                android:textColor="#ffffff" />
         </FrameLayout>
 
         <FrameLayout
@@ -128,11 +137,12 @@
             <TextView
                 android:id="@+id/tvShtrihCode"
                 android:layout_width="match_parent"
+
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/ivShtrihCode"
-                android:layout_marginBottom="10dp"
                 android:layout_alignParentStart="true"
                 android:layout_alignParentLeft="true"
+                android:layout_marginBottom="10dp"
                 android:text=""
                 android:textAlignment="center"
                 android:textColor="#ffffff"
