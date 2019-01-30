@@ -2,6 +2,8 @@ package com.example.z;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -44,6 +46,8 @@ import android.support.design.widget.BottomNavigationView;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import org.apache.commons.validator.routines.UrlValidator;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -71,7 +75,7 @@ public class activityMainMenu extends Activity {
     private boolean previewing = true;
     private String lastScannedCode;
     private Image codeImage;
-    private Button repeat,contin,share,genereate,shareBarCode;
+    private Button repeat,contin,share,genereate,shareBarCode,copy;
     private EditText editTextBarCode;
 
 
@@ -96,6 +100,7 @@ public class activityMainMenu extends Activity {
         share = (Button) findViewById(R.id.share);
         genereate = (Button) findViewById(R.id.generateNewBarCode);
         shareBarCode = (Button) findViewById(R.id.shareBarCode);
+        copy = (Button) findViewById(R.id.copy);
         preview = (FrameLayout) findViewById(R.id.cameraPreview);
         shtrihLayout = (RelativeLayout) findViewById(R.id.shtrih_layout_id);
         layoutGenerate = (LinearLayout) findViewById(R.id.layoutGenerate);
@@ -146,6 +151,15 @@ public class activityMainMenu extends Activity {
 
             }
         });
+        copy.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final android.content.ClipboardManager clipboardManager = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                ClipData clipData = ClipData.newPlainText("Source Text", tvShtrih.getText());
+                clipboardManager.setPrimaryClip(clipData);
+                Toast.makeText(getApplicationContext(),"Barcode copied to clipboard",Toast.LENGTH_LONG).show();
+            }
+        });
         genereate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -159,10 +173,24 @@ public class activityMainMenu extends Activity {
         contin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                Intent intent = new Intent(activityMainMenu.this, WebPage.class);
-                intent.putExtra("link", tvShtrih.getText().toString());
-                startActivity(intent);
+                String barCode = tvShtrih.getText().toString();
+                String[] schemes = {"http","https"}; // DEFAULT schemes = "http", "https", "ftp"
+                UrlValidator urlValidator = new UrlValidator(schemes);
+                if (urlValidator.isValid(barCode)) {
+                    Intent intent = new Intent(activityMainMenu.this, WebPage.class);
+                    intent.putExtra("link", barCode);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getApplicationContext(),"Sorry, this is dont link.",Toast.LENGTH_LONG).show();
+                }
+                /*if(barCode.contains("https://") | barCode.contains("http://")){
+                    Intent intent = new Intent(activityMainMenu.this, WebPage.class);
+                    intent.putExtra("link", barCode);
+                    startActivity(intent);
+                }
+                else {
+                    Toast.makeText(getApplicationContext(),"Sorry, this is dont link.",Toast.LENGTH_LONG).show();
+                }*/
             }
         });
         repeat.setOnClickListener(new View.OnClickListener() {

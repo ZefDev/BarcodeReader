@@ -18,39 +18,48 @@
             android:id="@+id/editTextBarCode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="25dp"
             android:ems="10"
             android:hint="Введите ссылку или фразу"
-            android:inputType="textPersonName" />
+            android:inputType="textPersonName"
+            android:textSize="20sp" />
 
         <ImageView
             android:id="@+id/ivShtrihCode"
-            android:layout_width="250dp"
-            android:layout_height="250dp"
+            android:layout_width="350dp"
+            android:layout_height="350dp"
             android:layout_gravity="center" />
 
         <Button
             android:id="@+id/generateNewBarCode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Сгенерировать" />
+            android:layout_margin="10dp"
+            android:background="@android:color/background_dark"
+            android:text="Сгенерировать"
+            android:textColor="@android:color/background_light"
+            android:textSize="16sp" />
 
         <Button
             android:id="@+id/shareBarCode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Поделиться" />
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="0dp"
+            android:layout_marginRight="10dp"
+            android:background="@android:color/black"
+            android:text="Поделиться"
+            android:textColor="@android:color/background_light"
+            android:textSize="16sp" />
     </LinearLayout>
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <RelativeLayout
         android:id="@+id/layoutScan"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/darker_gray"
         android:orientation="vertical"
-        android:visibility="visible"
-        >
+        android:visibility="visible">
 
 
         <FrameLayout
@@ -112,8 +121,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="#c8000000"
-            android:orientation="vertical"
             android:gravity="center_vertical"
+            android:orientation="vertical"
             android:visibility="invisible">
 
             <TextView
@@ -121,6 +130,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/ivShtrihCode"
+                android:layout_marginBottom="10dp"
                 android:layout_alignParentStart="true"
                 android:layout_alignParentLeft="true"
                 android:text=""
@@ -132,33 +142,39 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/tvShtrihCode"
+                android:gravity="center_horizontal"
                 android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/repeat"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="#00ffffff"
-                    android:text="Повторить"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="15dp"
+                    android:background="@drawable/replay"
                     android:textColor="#ffffff" />
 
                 <Button
                     android:id="@+id/contin"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="#00ffffff"
-                    android:text="Продолжить"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="15dp"
+                    android:background="@drawable/open_in_browser"
+                    android:textColor="#ffffff" />
+
+                <Button
+                    android:id="@+id/copy"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="15dp"
+                    android:background="@drawable/copy"
                     android:textColor="#ffffff" />
 
                 <Button
                     android:id="@+id/share"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="#00ffffff"
-                    android:text="Поделиться"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="15dp"
+                    android:background="@drawable/share"
                     android:textColor="#ffffff" />
 
             </LinearLayout>
